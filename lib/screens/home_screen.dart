@@ -215,24 +215,33 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _openHistory() {
+  void _openHistory([int initialTab = 0]) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => HistoryScreen(
+          initialTabIndex: initialTab,
           onReusePrompt: (wf, pos, neg) {
             setState(() {
-              _selectedWorkflow = wf;
+              if (wf != 'ComfyUI_History') {
+                _selectedWorkflow = wf;
+              }
               _positiveController.text = pos;
               _negativeController.text = neg;
             });
-            // Also reload workflow structure
-            WorkflowService.loadWorkflow(wf).then((json) {
-              if (mounted) setState(() => _loadedWorkflowJson = json);
-            });
+            // Also reload workflow structure if it was a file workflow
+            if (wf != 'ComfyUI_History') {
+              WorkflowService.loadWorkflow(wf).then((json) {
+                if (mounted) setState(() => _loadedWorkflowJson = json);
+              });
+            }
           },
         ),
       ),
     );
+  }
+
+  void _openServerHistory() {
+    _openHistory(1);
   }
 
   @override
@@ -251,9 +260,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         actions: [
           IconButton(
+            icon: const Icon(Icons.cloud_download_outlined),
+            tooltip: 'Server Prompt History',
+            onPressed: _openServerHistory,
+          ),
+          IconButton(
             icon: const Icon(Icons.history),
             tooltip: 'Generation History',
-            onPressed: _openHistory,
+            onPressed: () => _openHistory(0),
           ),
         ],
       ),

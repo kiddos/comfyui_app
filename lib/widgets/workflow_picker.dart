@@ -27,7 +27,25 @@ class WorkflowPicker extends StatelessWidget {
     return 'Workflow';
   }
 
-  Color _getCategoryColor(String category) {
+  Color _getCategoryColor(String category, {bool isDark = false}) {
+    if (isDark) {
+      switch (category) {
+        case 'Flux':
+          return Colors.indigo.shade300;
+        case 'SDXL':
+          return Colors.teal.shade300;
+        case 'AnimateDiff':
+          return Colors.purple.shade300;
+        case 'Pony':
+          return Colors.pink.shade300;
+        case 'Animagine':
+          return Colors.orange.shade300;
+        case 'Illustrious':
+          return Colors.blueGrey.shade300;
+        default:
+          return Colors.deepPurple.shade300;
+      }
+    }
     switch (category) {
       case 'Flux':
         return Colors.indigo;
@@ -47,6 +65,7 @@ class WorkflowPicker extends StatelessWidget {
   }
 
   void _showPickerBottomSheet(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -58,7 +77,7 @@ class WorkflowPicker extends StatelessWidget {
         selectedWorkflow: selectedWorkflow,
         cleanName: _cleanName,
         getCategory: _getCategory,
-        getCategoryColor: _getCategoryColor,
+        getCategoryColor: (cat) => _getCategoryColor(cat, isDark: isDark),
         onSelected: (chosen) {
           Navigator.pop(ctx);
           onSelected(chosen);
@@ -69,8 +88,10 @@ class WorkflowPicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
     final category = selectedWorkflow != null ? _getCategory(selectedWorkflow!) : '';
-    final categoryColor = _getCategoryColor(category);
+    final categoryColor = _getCategoryColor(category, isDark: isDark);
 
     return Card(
       elevation: 1,
@@ -87,7 +108,7 @@ class WorkflowPicker extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: categoryColor.withValues(alpha: 0.12),
+                  color: categoryColor.withValues(alpha: isDark ? 0.25 : 0.12),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.hub_outlined, color: categoryColor, size: 24),
@@ -99,11 +120,11 @@ class WorkflowPicker extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        const Text(
+                        Text(
                           'Selected Workflow',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey,
+                            color: theme.colorScheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -112,7 +133,7 @@ class WorkflowPicker extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: categoryColor.withValues(alpha: 0.15),
+                              color: categoryColor.withValues(alpha: isDark ? 0.25 : 0.15),
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
@@ -135,7 +156,9 @@ class WorkflowPicker extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: selectedWorkflow != null ? Colors.black87 : Colors.grey.shade600,
+                        color: selectedWorkflow != null
+                            ? theme.colorScheme.onSurface
+                            : theme.colorScheme.onSurfaceVariant,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -143,7 +166,10 @@ class WorkflowPicker extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_drop_down_circle_outlined, color: Colors.deepPurple),
+              Icon(
+                Icons.arrow_drop_down_circle_outlined,
+                color: theme.colorScheme.primary,
+              ),
             ],
           ),
         ),
@@ -189,6 +215,9 @@ class _WorkflowPickerSheetState extends State<_WorkflowPickerSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     final filtered = widget.workflows.where((wf) {
       final name = widget.cleanName(wf).toLowerCase();
       final category = widget.getCategory(wf);
@@ -212,7 +241,7 @@ class _WorkflowPickerSheetState extends State<_WorkflowPickerSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: isDark ? Colors.grey.shade700 : Colors.grey.shade300,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -220,14 +249,18 @@ class _WorkflowPickerSheetState extends State<_WorkflowPickerSheet> {
             const SizedBox(height: 16),
             Row(
               children: [
-                const Text(
+                Text(
                   'Select Workflow',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.onSurface,
+                  ),
                 ),
                 const Spacer(),
                 Text(
                   '${widget.workflows.length} available',
-                  style: const TextStyle(fontSize: 13, color: Colors.grey),
+                  style: TextStyle(fontSize: 13, color: theme.colorScheme.onSurfaceVariant),
                 ),
               ],
             ),
@@ -267,10 +300,10 @@ class _WorkflowPickerSheetState extends State<_WorkflowPickerSheet> {
             const Divider(),
             Expanded(
               child: filtered.isEmpty
-                  ? const Center(
+                  ? Center(
                       child: Text(
                         'No workflows match your search',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
                       ),
                     )
                   : ListView.builder(
@@ -285,14 +318,16 @@ class _WorkflowPickerSheetState extends State<_WorkflowPickerSheet> {
                         return ListTile(
                           contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                           leading: CircleAvatar(
-                            backgroundColor: color.withValues(alpha: 0.15),
+                            backgroundColor: color.withValues(alpha: isDark ? 0.25 : 0.15),
                             child: Icon(Icons.account_tree_outlined, color: color, size: 20),
                           ),
                           title: Text(
                             widget.cleanName(wf),
                             style: TextStyle(
                               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected ? Colors.deepPurple : Colors.black87,
+                              color: isSelected
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface,
                             ),
                           ),
                           subtitle: Text(
@@ -300,7 +335,7 @@ class _WorkflowPickerSheetState extends State<_WorkflowPickerSheet> {
                             style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w500),
                           ),
                           trailing: isSelected
-                              ? const Icon(Icons.check_circle, color: Colors.deepPurple)
+                              ? Icon(Icons.check_circle, color: theme.colorScheme.primary)
                               : null,
                           onTap: () => widget.onSelected(wf),
                         );

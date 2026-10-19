@@ -6,6 +6,7 @@ import 'package:comfyui_app/models/generation_record.dart';
 import 'package:comfyui_app/services/database_service.dart';
 import 'package:comfyui_app/services/workflow_service.dart';
 import 'package:comfyui_app/widgets/prompt_editor.dart';
+import 'package:comfyui_app/widgets/workflow_picker.dart';
 
 void main() {
   setUpAll(() {
@@ -158,6 +159,55 @@ void main() {
       expect(find.text('Negative Prompt'), findsOneWidget);
       expect(find.text('Initial Positive'), findsOneWidget);
       expect(find.text('Initial Negative'), findsOneWidget);
+    });
+  });
+
+  group('WorkflowPicker Widget Tests', () {
+    testWidgets('WorkflowPicker text is not black in dark theme', (tester) async {
+      final darkTheme = ThemeData(
+        brightness: Brightness.dark,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.deepPurple,
+          brightness: Brightness.dark,
+        ),
+      );
+
+      final workflows = ['flux-dev-ghibli.json', 'sdxl-base.json'];
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: darkTheme,
+          home: Scaffold(
+            body: WorkflowPicker(
+              workflows: workflows,
+              selectedWorkflow: 'flux-dev-ghibli.json',
+              onSelected: (_) {},
+            ),
+          ),
+        ),
+      );
+
+      // Verify the selected workflow text uses theme color and not Colors.black87
+      final textWidget = tester.widget<Text>(find.text('flux-dev-ghibli'));
+      expect(textWidget.style?.color, isNot(Colors.black87));
+      expect(textWidget.style?.color, darkTheme.colorScheme.onSurface);
+
+      // Open bottom sheet
+      await tester.tap(find.byType(WorkflowPicker));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Select Workflow'), findsOneWidget);
+      expect(find.text('flux-dev-ghibli'), findsWidgets);
+
+      // In the bottom sheet, the unselected item 'sdxl-base' should have onSurface color (not black87)
+      final sdxlTextFinder = find.descendant(
+        of: find.byType(ListTile),
+        matching: find.text('sdxl-base'),
+      );
+      expect(sdxlTextFinder, findsOneWidget);
+      final sdxlTextWidget = tester.widget<Text>(sdxlTextFinder);
+      expect(sdxlTextWidget.style?.color, isNot(Colors.black87));
+      expect(sdxlTextWidget.style?.color, darkTheme.colorScheme.onSurface);
     });
   });
 }

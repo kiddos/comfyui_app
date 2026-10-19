@@ -4,7 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
+import '../models/comfyui_history_item.dart';
 import '../models/execution_state.dart';
+import '../models/generation_record.dart';
+import 'database_service.dart';
+import 'image_saver_service.dart';
 
 class ComfyUIService {
   static final ComfyUIService instance = ComfyUIService._internal();
@@ -413,5 +417,128 @@ class ComfyUIService {
         await controller.close();
       }
     }
+  }
+
+  /// Fetches history from the ComfyUI server.
+  /// Returns a list of [ComfyUIHistoryItem] sorted with the latest prompts first.
+  Future<List<ComfyUIHistoryItem>> fetchHistory({
+    required String serverUrl,
+    int? maxItems,
+  }) async {
+    final normalized = normalizeUrl(serverUrl);
+    final uri = Uri.parse('$normalized/history${maxItems != null ? '?max_items=$maxItems' : ''}');
+    final res = await http.get(uri).timeout(const Duration(seconds: 12));
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to fetch history (HTTP ${res.statusCode}): ${res.body}');
+    }
+
+    final dynamic decoded = jsonDecode(res.body);
+    if (decoded is! Map) {
+      return [];
+    }
+
+    final items = <ComfyUIHistoryItem>[];
+    for (final entry in decoded.entries) {
+      if (entry.value is Map) {
+        items.add(ComfyUIHistoryItem.fromComfyJson(
+          entry.key.toString(),
+          Map<String, dynamic>.from(entry.value as Map),
+        ));
+      }
+    }
+
+    // Sort: highest prompt number first, or fallback to 0
+    items.sort((a, b) {
+      final aNum = a.promptNumber;
+      final bNum = b.promptNumber;
+      if (aNum != null && bNum != null) {
+        return bNum.compareTo(aNum);
+      }
+      if (aNum != null) return -1;
+      if (bNum != null) return 1;
+      return 0;
+    });
+
+    return items;
+  }
+
+  /// Fetches history for a single specific prompt ID.
+  Future<ComfyUIHistoryItem?> fetchPromptHistory({
+    required String serverUrl,
+    required String promptId,
+  }) async {
+    final normalized = normalizeUrl(serverUrl);
+    final uri = Uri.parse('$normalized/history/$promptId');
+    final res = await http.get(uri).timeout(const Duration(seconds: 12));
+
+    if (res.statusCode != 200) {
+      throw Exception('Failed to fetch prompt history (HTTP ${res.statusCode})');
+    }
+
+    final dynamic decoded = jsonDecode(res.body);
+    if (decoded is! Map) return null;
+
+    final promptData = decoded[promptId];
+    if (promptData is Map) {
+      return ComfyUIHistoryItem.fromComfyJson(
+        promptId,
+        Map<String, dynamic>.from(promptData),
+      );
+    }
+    return null;
+  }
+
+  /// Downloads raw bytes of an output image from the ComfyUI server.
+  Future<Uint8List> downloadImageBytes({
+    required String serverUrl,
+    required ComfyUIImageInfo imageInfo,
+  }) async {
+    final uri = imageInfo.getViewUri(serverUrl);
+    final res = await http.get(uri).timeout(const Duration(seconds: 30));
+    if (res.statusCode != 200) {
+      throw Exception('Failed to download image (HTTP ${res.statusCode})');
+    }
+    return res.bodyBytes;
+  }
+
+  /// Downloads an image from the ComfyUI server, saves it to the gallery / local storage,
+  /// and records it in the SQLite database.
+  Future<String> downloadAndSaveImage({
+    required String serverUrl,
+    required ComfyUIImageInfo imageInfo,
+    required String promptId,
+    String? workflowName,
+    String? positivePrompt,
+    String? negativePrompt,
+  }) async {
+    final bytes = await downloadImageBytes(
+      serverUrl: serverUrl,
+      imageInfo: imageInfo,
+    );
+
+    final resolvedWorkflow = (workflowName != null && workflowName.isNotEmpty)
+        ? workflowName
+        : 'ComfyUI_History';
+
+    final savedPath = await ImageSaverService.saveImage(
+      bytes: bytes,
+      workflowName: resolvedWorkflow,
+      promptId: promptId,
+    );
+
+    // Save record to local database
+    final record = GenerationRecord(
+      workflowName: resolvedWorkflow,
+      positivePrompt: positivePrompt ?? '',
+      negativePrompt: negativePrompt ?? '',
+      promptId: promptId,
+      imagePath: savedPath,
+      serverUrl: serverUrl,
+      createdAt: DateTime.now(),
+    );
+    await DatabaseService.instance.insertGeneration(record);
+
+    return savedPath;
   }
 }

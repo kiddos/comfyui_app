@@ -1,0 +1,245 @@
+{
+  "1": {
+    "inputs": {
+      "samples": [
+        "4",
+        0
+      ],
+      "vae": [
+        "3",
+        2
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "2": {
+    "inputs": {
+      "ckpt_name": "sdxl/sd_xl_refiner_1.0.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "3": {
+    "inputs": {
+      "ckpt_name": "sdxl/sd_xl_base_1.0.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "4": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 666,
+      "steps": 30,
+      "cfg": 7,
+      "sampler_name": "dpmpp_sde_gpu",
+      "scheduler": "karras",
+      "start_at_step": 0,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "7",
+        0
+      ],
+      "positive": [
+        "14",
+        0
+      ],
+      "negative": [
+        "15",
+        0
+      ],
+      "latent_image": [
+        "9",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "5": {
+    "inputs": {
+      "samples": [
+        "6",
+        0
+      ],
+      "vae": [
+        "2",
+        2
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "6": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 666,
+      "steps": 38,
+      "cfg": 8,
+      "sampler_name": "dpmpp_sde_gpu",
+      "scheduler": "karras",
+      "start_at_step": 30,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "2",
+        0
+      ],
+      "positive": [
+        "17",
+        0
+      ],
+      "negative": [
+        "16",
+        0
+      ],
+      "latent_image": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "7": {
+    "inputs": {
+      "lora_name": "sdxl/StudioGhibli.Redmond-StdGBRRedmAF-StudioGhibli.safetensors",
+      "strength_model": 1,
+      "strength_clip": 1,
+      "model": [
+        "3",
+        0
+      ],
+      "clip": [
+        "3",
+        1
+      ]
+    },
+    "class_type": "LoraLoader",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "8": {
+    "inputs": {
+      "images": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "PreviewImage",
+    "_meta": {
+      "title": "Preview Image"
+    }
+  },
+  "9": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentImage",
+    "_meta": {
+      "title": "Empty Latent Image"
+    }
+  },
+  "10": {
+    "inputs": {
+      "filename_prefix": "image/SDXL/Ghibli-Redmond",
+      "images": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "Save Image"
+    }
+  },
+  "14": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "crop_w": 0,
+      "crop_h": 0,
+      "target_width": 1024,
+      "target_height": 1024,
+      "text_g": "a cute white cat, humanoide, StdGBRedmAF, Studio Ghibli, <lora:StdGBRedmAFPashDebiCOMTE:1>",
+      "text_l": "adorable cute white cat, domestic short hair, Pixar style, Disney style, Pixar animation, character design, cozy lighting",
+      "clip": [
+        "7",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncodeSDXL",
+    "_meta": {
+      "title": "positive_prompt"
+    }
+  },
+  "15": {
+    "inputs": {
+      "width": 1024,
+      "height": 1024,
+      "crop_w": 0,
+      "crop_h": 0,
+      "target_width": 1024,
+      "target_height": 1024,
+      "text_g": "bad art, ugly, text, watermark, duplicated, deformed",
+      "text_l": "logo,text,low quality,sketches,watermark,signature,bad anatomy,worstquality,grayscale,monochrome,lowres,bad proportions,out of focus,username,cropped,extra limb,disconnected limbs,floating limbs,malformed limbs,missing limb,extra arms,mutated hands,poorly drawn hands,malformed hands,mutated hands and fingers,bad hands,missing fingers,fused fingers,too many fingers,extra legs,bad feet,poorly drawn face,disfigured,ugly,mutation,mutated,deformed,bad body,embedding:EasyNegative",
+      "clip": [
+        "7",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncodeSDXL",
+    "_meta": {
+      "title": "negative_prompt"
+    }
+  },
+  "16": {
+    "inputs": {
+      "ascore": 2.5,
+      "width": 1024,
+      "height": 1024,
+      "text": "bad art, ugly, text, watermark, duplicated, deformed",
+      "clip": [
+        "2",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncodeSDXLRefiner",
+    "_meta": {
+      "title": "negative_prompt_refiner"
+    }
+  },
+  "17": {
+    "inputs": {
+      "ascore": 6,
+      "width": 1024,
+      "height": 1024,
+      "text": "a cute white cat, humanoide, StdGBRedmAF, Studio Ghibli, <lora:StdGBRedmAFPashDebiCOMTE:1>",
+      "clip": [
+        "2",
+        1
+      ]
+    },
+    "class_type": "CLIPTextEncodeSDXLRefiner",
+    "_meta": {
+      "title": "positive_prompt_refiner"
+    }
+  }
+}

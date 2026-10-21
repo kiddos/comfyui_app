@@ -70,7 +70,7 @@ void main() {
       expect(item.images[0].type, 'output');
       expect(item.images[1].filename, 'ComfyUI_00043_.png');
 
-      final viewUri = item.images[0].getViewUri('http://192.168.0.198:8188');
+      final viewUri = item.images[0].getViewUri('http://192.168.0.100:8188');
       expect(viewUri.path, '/view');
       expect(viewUri.queryParameters['filename'], 'ComfyUI_00042_.png');
       expect(viewUri.queryParameters['subfolder'], 'ghibli');

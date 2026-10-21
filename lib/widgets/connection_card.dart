@@ -111,8 +111,10 @@ class _ConnectionCardState extends State<ConnectionCard> {
                 controller.text = DatabaseService.defaultServerUrl;
               },
               icon: const Icon(Icons.restore, size: 16),
-              label: const Text('Reset to default (192.168.0.198:8188)',
-                  style: TextStyle(fontSize: 12)),
+              label: Text(
+                'Reset to default (${DatabaseService.defaultServerUrl.replaceFirst('http://', '')})',
+                style: const TextStyle(fontSize: 12),
+              ),
             ),
           ],
         ),

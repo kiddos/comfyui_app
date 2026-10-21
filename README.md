@@ -9,7 +9,7 @@ A modern, cross-platform Flutter application for interacting with and executing 
 - **🔌 Real-Time ComfyUI Connectivity**
   - Connect to local or remote ComfyUI instances over HTTP and WebSocket (`/ws`).
   - Live connection status check via `/system_stats` with ping timestamps.
-  - Persistent server configuration with configurable default fallback (`http://192.168.0.198:8188`).
+  - Persistent server configuration with configurable default fallback (`http://192.168.0.100:8188`).
 
 - **🎨 Bundled Workflow Library & Categorization**
   - Includes pre-configured ComfyUI API workflows ready to run out of the box (Flux Dev, SDXL, AnimateDiff, Pony, Animagine, Illustrious).

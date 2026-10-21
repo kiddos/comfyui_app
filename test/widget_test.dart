@@ -98,9 +98,9 @@ void main() {
   });
 
   group('DatabaseService Tests', () {
-    test('Default server URL is http://192.168.0.198:8188', () async {
+    test('Default server URL is http://192.168.0.100:8188', () async {
       final url = await DatabaseService.instance.getServerUrl();
-      expect(url, contains('192.168.0.198:8188'));
+      expect(url, contains('192.168.0.100:8188'));
     });
 
     test('Saving and retrieving server URL works', () async {
@@ -113,6 +113,13 @@ void main() {
       await DatabaseService.instance.setServerUrl(DatabaseService.defaultServerUrl);
     });
 
+    test('Legacy default URL 192.168.0.198:8188 automatically migrates to 192.168.0.100:8188', () async {
+      // Simulate existing legacy setting
+      await DatabaseService.instance.setServerUrl('http://192.168.0.198:8188');
+      final fetched = await DatabaseService.instance.getServerUrl();
+      expect(fetched, DatabaseService.defaultServerUrl);
+    });
+
     test('Inserting and querying GenerationRecord works', () async {
       final record = GenerationRecord(
         workflowName: 'flux-dev-ghibli.json',
@@ -120,7 +127,7 @@ void main() {
         negativePrompt: 'bad quality',
         promptId: 'test-prompt-id-123',
         imagePath: '/tmp/test.png',
-        serverUrl: 'http://192.168.0.198:8188',
+        serverUrl: 'http://192.168.0.100:8188',
         createdAt: DateTime.now(),
       );
 

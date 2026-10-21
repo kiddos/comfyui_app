@@ -16,7 +16,7 @@ class ComfyUIService {
 
   static String normalizeUrl(String input) {
     var url = input.trim();
-    if (url.isEmpty) return 'http://192.168.0.198:8188';
+    if (url.isEmpty) return DatabaseService.defaultServerUrl;
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = 'http://$url';
     }

@@ -121,7 +121,7 @@ sequenceDiagram
 
 #### `ComfyUIService` (`lib/services/comfyui_service.dart`)
 - **Singleton**: Access via `ComfyUIService.instance`.
-- **`normalizeUrl(String input)`**: Cleans whitespace, prefixes missing `http://`, strips trailing slashes, and defaults to `http://192.168.0.198:8188`.
+- **`normalizeUrl(String input)`**: Cleans whitespace, prefixes missing `http://`, strips trailing slashes, and defaults to `http://192.168.0.100:8188`.
 - **`testConnection(String serverUrl)`**: Checks `/system_stats` then falls back to `/prompt` with a 4s timeout.
 - **`runWorkflow(...)`**: Returns a `Stream<ExecutionProgress>`. Handles WebSocket connection, listener lifecycle, cancellation, error messages, and automatic result download.
 - **`fetchHistory(...)` & `fetchPromptHistory(...)`**: Reads from `/history` or `/history/{promptId}` and converts raw JSON into sorted `List<ComfyUIHistoryItem>`.

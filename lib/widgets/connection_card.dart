@@ -177,7 +177,7 @@ class _ConnectionCardState extends State<ConnectionCard> {
         ),
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         child: Column(
           children: [
             Row(
@@ -197,12 +197,16 @@ class _ConnectionCardState extends State<ConnectionCard> {
                     children: [
                       Row(
                         children: [
-                          Text(
-                            statusText,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              color: statusColor,
+                          Flexible(
+                            child: Text(
+                              statusText,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                                color: statusColor,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
                             ),
                           ),
                           if (_lastCheckedTime != null) ...[
@@ -211,7 +215,7 @@ class _ConnectionCardState extends State<ConnectionCard> {
                               '($_lastCheckedTime)',
                               style: TextStyle(
                                 fontSize: 11,
-                                color: Colors.grey.shade600,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                               ),
                             ),
                           ],
@@ -230,20 +234,24 @@ class _ConnectionCardState extends State<ConnectionCard> {
                   ),
                 ),
                 IconButton(
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                   icon: _status == ServerStatus.checking
                       ? const SizedBox(
-                          width: 18,
-                          height: 18,
+                          width: 16,
+                          height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Icon(Icons.refresh),
+                      : const Icon(Icons.refresh, size: 20),
                   tooltip: 'Test Connection',
                   onPressed: _status == ServerStatus.checking
                       ? null
                       : _checkConnection,
                 ),
                 IconButton(
-                  icon: const Icon(Icons.edit_outlined),
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                  icon: const Icon(Icons.edit_outlined, size: 20),
                   tooltip: 'Edit Server URL',
                   onPressed: _showEditDialog,
                 ),

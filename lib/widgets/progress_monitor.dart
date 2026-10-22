@@ -4,11 +4,13 @@ import '../models/execution_state.dart';
 class ProgressMonitor extends StatelessWidget {
   final ExecutionProgress progress;
   final VoidCallback? onCancel;
+  final VoidCallback? onDismiss;
 
   const ProgressMonitor({
     super.key,
     required this.progress,
     this.onCancel,
+    this.onDismiss,
   });
 
   @override
@@ -17,12 +19,32 @@ class ProgressMonitor extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     if (progress.status == ExecutionStatus.error) {
+      final errorColor = isDark ? Colors.red.shade300 : Colors.red.shade700;
+      final errorCardBg = isDark
+          ? Colors.red.shade900.withValues(alpha: 0.22)
+          : Colors.red.shade50;
+      final errorBorderColor = isDark
+          ? Colors.red.shade700.withValues(alpha: 0.35)
+          : Colors.red.shade200;
+      final detailBg = isDark
+          ? theme.colorScheme.surface
+          : Colors.white;
+      final detailBorder = isDark
+          ? Colors.red.shade900.withValues(alpha: 0.4)
+          : Colors.red.shade100;
+      final detailTextColor = isDark
+          ? theme.colorScheme.onSurface
+          : Colors.red.shade900;
+
       return Card(
-        color: Colors.red.shade50,
+        color: errorCardBg,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.red.shade200),
+          side: BorderSide(color: errorBorderColor),
         ),
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -31,33 +53,44 @@ class ProgressMonitor extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.red),
+                  Icon(Icons.error_outline, color: errorColor),
                   const SizedBox(width: 8),
-                  Text(
-                    progress.statusMessage,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                      fontSize: 15,
+                  Expanded(
+                    child: Text(
+                      progress.statusMessage,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: errorColor,
+                        fontSize: 15,
+                      ),
                     ),
                   ),
+                  if (onDismiss != null)
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                      icon: Icon(Icons.close, size: 18, color: errorColor),
+                      tooltip: 'Dismiss',
+                      onPressed: onDismiss,
+                    ),
                 ],
               ),
               if (progress.errorMessage != null) ...[
                 const SizedBox(height: 8),
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: detailBg,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red.shade100),
+                    border: Border.all(color: detailBorder),
                   ),
                   child: Text(
                     progress.errorMessage!,
                     style: TextStyle(
                       fontFamily: 'monospace',
                       fontSize: 12,
-                      color: Colors.red.shade900,
+                      color: detailTextColor,
                     ),
                   ),
                 ),

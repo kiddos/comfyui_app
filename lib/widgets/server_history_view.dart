@@ -82,6 +82,16 @@ class ServerHistoryViewState extends State<ServerHistoryView> {
     }
   }
 
+  String _friendlyError(String raw) {
+    if (raw.contains('TimeoutException') || raw.contains('Future not completed')) {
+      return 'Connection timed out. ComfyUI server at $_serverUrl is not responding.';
+    }
+    if (raw.contains('Connection refused') || raw.contains('SocketException') || raw.contains('Failed host lookup')) {
+      return 'Unable to connect to ComfyUI at $_serverUrl. Please check if the server is running and reachable.';
+    }
+    return raw;
+  }
+
   void _applyFilter() {
     final query = _searchController.text.trim().toLowerCase();
     if (query.isEmpty) {
@@ -583,18 +593,30 @@ class ServerHistoryViewState extends State<ServerHistoryView> {
                   const SizedBox(height: 16),
                 ],
                 if (item.positivePrompt.isNotEmpty) ...[
-                  const Text(
+                  Text(
                     'Positive Prompt',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.green),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.green.shade300
+                          : Colors.green.shade800,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.green.shade50.withAlpha(128),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.green.shade900.withValues(alpha: 0.25)
+                          : Colors.green.shade50.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.shade200),
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.green.shade700.withValues(alpha: 0.35)
+                            : Colors.green.shade200,
+                      ),
                     ),
                     child: SelectableText(
                       item.positivePrompt,
@@ -604,18 +626,30 @@ class ServerHistoryViewState extends State<ServerHistoryView> {
                   const SizedBox(height: 12),
                 ],
                 if (item.negativePrompt.isNotEmpty) ...[
-                  const Text(
+                  Text(
                     'Negative Prompt',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.redAccent),
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.red.shade300
+                          : Colors.redAccent,
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.shade50.withAlpha(128),
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.red.shade900.withValues(alpha: 0.25)
+                          : Colors.red.shade50.withValues(alpha: 0.7),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.red.shade200),
+                      border: Border.all(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Colors.red.shade700.withValues(alpha: 0.35)
+                            : Colors.red.shade200,
+                      ),
                     ),
                     child: SelectableText(
                       item.negativePrompt,
@@ -738,22 +772,36 @@ class ServerHistoryViewState extends State<ServerHistoryView> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.cloud_off, size: 56, color: Colors.redAccent),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'Failed to connect to ComfyUI',
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _errorMessage!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(fontSize: 12, color: Colors.grey),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.cloud_off,
+                                size: 48,
+                                color: Theme.of(context).colorScheme.error,
+                              ),
                             ),
                             const SizedBox(height: 16),
+                            const Text(
+                              'Server Offline or Unreachable',
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              _friendlyError(_errorMessage!),
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
                             FilledButton.icon(
                               icon: const Icon(Icons.refresh),
-                              label: const Text('Retry'),
+                              label: const Text('Retry Connection'),
                               onPressed: reloadHistory,
                             ),
                           ],

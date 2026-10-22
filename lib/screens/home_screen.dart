@@ -144,8 +144,23 @@ class _HomeScreenState extends State<HomeScreen> {
       (progressEvent) async {
         if (!mounted) return;
 
+        var displayEvent = progressEvent;
+        if (progressEvent.status == ExecutionStatus.error && progressEvent.errorMessage != null) {
+          final raw = progressEvent.errorMessage!;
+          String friendly = raw;
+          if (raw.contains('TimeoutException') || raw.contains('Future not completed')) {
+            friendly = 'Unable to reach ComfyUI server at $_serverUrl.\nConnection timed out. Please check that ComfyUI is running.';
+          } else if (raw.contains('Connection refused') || raw.contains('SocketException') || raw.contains('Failed host lookup')) {
+            friendly = 'Failed to connect to ComfyUI server at $_serverUrl.\nPlease ensure the server is running and accessible.';
+          }
+          displayEvent = progressEvent.copyWith(
+            statusMessage: 'Connection Error',
+            errorMessage: friendly,
+          );
+        }
+
         setState(() {
-          _progress = progressEvent;
+          _progress = displayEvent;
         });
 
         // When image bytes are ready and saving is indicated:
@@ -194,11 +209,18 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       onError: (err) {
         if (!mounted) return;
+        final raw = err.toString();
+        String friendly = raw;
+        if (raw.contains('TimeoutException') || raw.contains('Future not completed')) {
+          friendly = 'Unable to reach ComfyUI server at $_serverUrl.\nConnection timed out. Please check that ComfyUI is running.';
+        } else if (raw.contains('Connection refused') || raw.contains('SocketException') || raw.contains('Failed host lookup')) {
+          friendly = 'Failed to connect to ComfyUI server at $_serverUrl.\nPlease ensure the server is running and accessible.';
+        }
         setState(() {
           _progress = ExecutionProgress(
             status: ExecutionStatus.error,
-            statusMessage: 'Workflow execution error',
-            errorMessage: err.toString(),
+            statusMessage: 'Connection Error',
+            errorMessage: friendly,
           );
         });
       },
@@ -355,6 +377,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ProgressMonitor(
                         progress: _progress,
                         onCancel: _progress.isRunning ? _cancelExecution : null,
+                        onDismiss: _progress.status == ExecutionStatus.error
+                            ? () => setState(() => _progress = const ExecutionProgress())
+                            : null,
                       ),
                       const SizedBox(height: 16),
                     ],

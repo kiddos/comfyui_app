@@ -227,6 +227,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
       return const Center(child: CircularProgressIndicator());
     }
 
+    final theme = Theme.of(context);
     if (_records.isEmpty) {
       return Center(
         child: Padding(
@@ -234,17 +235,28 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.history_toggle_off, size: 64, color: Colors.grey.shade400),
+              Icon(
+                Icons.history_toggle_off,
+                size: 64,
+                color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'No saved generations yet',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.onSurface,
+                ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Images generated or downloaded from ComfyUI server will appear here.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: Colors.grey),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 20),
               FilledButton.icon(
@@ -358,7 +370,7 @@ class _HistoryScreenState extends State<HistoryScreen> with SingleTickerProvider
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Generation & Server History'),
+        title: const Text('History'),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [

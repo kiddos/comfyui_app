@@ -52,11 +52,17 @@ class ResultView extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Card(
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.green.withValues(alpha: 0.3), width: 1.5),
+        side: BorderSide(
+          color: Colors.green.withValues(alpha: isDark ? 0.35 : 0.3),
+          width: 1.5,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -65,24 +71,34 @@ class ResultView extends StatelessWidget {
           // Header
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            color: Colors.green.shade50,
+            color: isDark
+                ? Colors.green.shade900.withValues(alpha: 0.32)
+                : Colors.green.shade50,
             child: Row(
               children: [
-                const Icon(Icons.check_circle, color: Colors.green, size: 20),
+                Icon(
+                  Icons.check_circle,
+                  color: isDark ? Colors.green.shade300 : Colors.green,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
-                const Expanded(
+                Expanded(
                   child: Text(
                     'Generation Complete! Saved to Gallery',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: Colors.green,
+                      color: isDark ? Colors.green.shade300 : Colors.green.shade800,
                       fontSize: 13,
                     ),
                   ),
                 ),
                 if (onDismiss != null)
                   IconButton(
-                    icon: const Icon(Icons.close, size: 18),
+                    icon: Icon(
+                      Icons.close,
+                      size: 18,
+                      color: isDark ? Colors.green.shade300 : Colors.green.shade800,
+                    ),
                     onPressed: onDismiss,
                     visualDensity: VisualDensity.compact,
                   ),
@@ -99,7 +115,7 @@ class ResultView extends StatelessWidget {
                 Container(
                   constraints: const BoxConstraints(maxHeight: 380),
                   width: double.infinity,
-                  color: Colors.black12,
+                  color: isDark ? Colors.black38 : Colors.black12,
                   child: imageBytes != null
                       ? Image.memory(
                           imageBytes!,

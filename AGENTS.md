@@ -9,44 +9,15 @@ This document provides architecture blueprints, execution flows, conventions, an
 **ComfyUI Runner** (`comfyui_app`) is a cross-platform Flutter application (Android, iOS, Linux, macOS, Windows, Web) designed to execute, monitor, and manage ComfyUI workflows directly from desktop and mobile devices.
 
 ### Architecture
-- **Layer-First Structure**: The `lib/` directory is organized by technical concern (`models/`, `screens/`, `services/`, `widgets/`, `main.dart`).
+- **Layer-First Structure**: The `lib/` directory is organized by technical concern:
+  - `lib/main.dart` - Entry point, theme definitions (Material 3 light/dark)
+  - `lib/models/` - Domain models and enums
+  - `lib/services/` - Core logic, API, database, and asset handlers
+  - `lib/screens/` - Full-page routing destinations
+  - `lib/widgets/` - Reusable UI components
 - **State Management**: Relies heavily on Flutter's built-in `setState` within `StatefulWidget`s. No external state management libraries (like Provider, Riverpod, Bloc, or Signals) are used.
 - **Dependency Injection**: Uses Singleton instances for services, specifically `DatabaseService.instance` and `ComfyUIService.instance`.
-- **Routing**: Uses standard Flutter `Navigator` (`Navigator.push`, `Navigator.pop`). No advanced routing packages (like GoRouter or AutoRoute) are used.
-
-### Directory Map
-```text
-comfyui_app/
-├── lib/
-│   ├── main.dart                       # Entry point, theme definitions (Material 3 light/dark)
-│   ├── models/
-│   │   ├── execution_state.dart        # ExecutionStatus enum and ExecutionProgress state
-│   │   ├── comfyui_history_item.dart   # Server history & ComfyUIImageInfo parser
-│   │   └── generation_record.dart      # Local history database model
-│   ├── services/
-│   │   ├── comfyui_service.dart        # HTTP client, WebSocket stream & server history API
-│   │   ├── database_service.dart       # SQLite FFI manager with in-memory fallback
-│   │   ├── image_saver_service.dart    # Device gallery and filesystem export handler
-│   │   └── workflow_service.dart       # JSON asset loader, prompt extractor, seed injector
-│   ├── screens/
-│   │   ├── home_screen.dart            # Main generation dashboard (picker, prompts, run, preview)
-│   │   ├── history_screen.dart         # Dual-tab history screen (Saved Local vs Server History)
-│   │   └── server_history_screen.dart  # Dedicated server history browser page
-│   └── widgets/
-│       ├── connection_card.dart        # Server URL input, status indicator, and ping probe
-│       ├── progress_monitor.dart       # Progress bar, current step, and cancel action
-│       ├── prompt_editor.dart          # Cards for positive/negative prompts & seed toggle
-│       ├── result_view.dart            # Pinch-to-zoom image viewer & gallery save actions
-│       ├── server_history_view.dart    # Searchable list of remote runs with download & reuse
-│       └── workflow_picker.dart        # Categorized bottom-sheet selector with search
-├── workflows/                          # Bundled ComfyUI workflow JSON files (API format)
-└── test/
-    ├── history_feature_test.dart       # Unit & widget tests for server history parsing & UI
-    └── widget_test.dart                # Tests for workflow parsing, DB fallback, & widget UI
-```
-
-### Component Details & Data Flow
-Data generally flows from UI (`HomeScreen`) -> Services (`WorkflowService`, `ComfyUIService`) -> ComfyUI Server -> UI -> Local DB (`DatabaseService`).
+- **Data Flow**: Data generally flows from UI (`HomeScreen`) -> Services (`WorkflowService`, `ComfyUIService`) -> ComfyUI Server -> UI -> Local DB (`DatabaseService`).
 
 ```mermaid
 sequenceDiagram
@@ -74,39 +45,33 @@ sequenceDiagram
     UI-->>UI: ExecutionProgress(status: completed)
 ```
 
-**Key Service Responsibilities:**
-- **`ComfyUIService`**: Manages HTTP clients, WebSocket streams (`normalizeUrl`, `testConnection`, `runWorkflow`, `fetchHistory`).
-- **`WorkflowService`**: Handles JSON asset loading, prompt extraction, and seed injection (`getAvailableWorkflows`, `extractPrompts`, `prepareWorkflowWithPrompts`).
-- **`DatabaseService`**: SQLite database with in-memory fallback for persistent local history tracking.
-- **`ImageSaverService`**: Writes output PNGs to local storage and syncs with native galleries.
-
 ---
 
 ## 2. Environment, Code Generation & Build Commands
 
-- **Flutter/Dart SDK**: Requires Dart SDK `>= 3.13.5` and Flutter Version `3.47.7` (Stable).
-  > **Note for AI Agents**: In sandbox environments where home-directory toolchains are isolated, run shell commands with the appropriate permissions if `flutter` binary resolution requires host access.
+- **Flutter/Dart SDK**: Requires Dart SDK `>= 3.13.5`. Ensure standard `flutter` / `dart` commands are used. The project does not use environment version managers like `.fvmrc` or `mise.toml`.
 - **Dependencies Management**: Fetch dependencies using:
   ```bash
   flutter pub get
   ```
-- **Code Generation**: This project does **not** use code generation tools like `build_runner`, `freezed`, or `json_serializable`.
-- **Localization**: No special localization config (`l10n.yaml`) is present.
+- **Code Generation**: This project does **not** use code generation tools (no `build_runner`, `freezed`, `json_serializable`, `pigeon`, or `ffigen`). No `dart run build_runner build` commands are necessary.
+- **Localization**: No localization setup (`l10n.yaml`, `.arb` files) is present. Do not run `flutter gen-l10n`.
 - **Build Commands**:
-  - For Android APK (debug): `flutter build apk --debug`
-  - For Linux Desktop: `flutter build linux`
-  - For Windows Desktop: `flutter build windows`
-  - For macOS Desktop: `flutter build macos`
+  - Android APK (debug): `flutter build apk --debug`
+  - Linux Desktop: `flutter build linux`
+  - Windows Desktop: `flutter build windows`
+  - macOS Desktop: `flutter build macos`
+  - Web: `flutter build web`
 
 ---
 
 ## 3. Testing, Static Analysis & Verification Workflow
 
-- **Static Analysis**: The project uses `flutter_lints`. To check for errors, warnings, and lints (must pass with 0 issues):
+- **Static Analysis**: The project uses standard `flutter_lints`. To check for errors, warnings, and lints:
   ```bash
   flutter analyze
   ```
-- **Formatting**: To format all Dart code:
+- **Formatting**: To format all Dart code and ensure correct styling:
   ```bash
   dart format --output=none --set-exit-if-changed .
   ```
@@ -115,15 +80,11 @@ sequenceDiagram
     ```bash
     flutter test
     ```
-  - To target a single test file (e.g., `widget_test.dart`):
+  - To target a single test file:
     ```bash
     flutter test test/widget_test.dart
     ```
-  - **Note**: Only headless unit/widget tests are present. No device-dependent `integration_test/` directory exists.
-
-**Existing Test Suites**:
-1. `test/widget_test.dart`: Tests for `WorkflowService` (prompt extraction, seed randomization), `DatabaseService`, `PromptEditor`, and `WorkflowPicker`.
-2. `test/history_feature_test.dart`: Tests for `ComfyUIHistoryItem` (JSON parsing) and `ServerHistoryView`.
+  - **Headless vs Integration Tests**: Only headless unit/widget tests are present in `test/`, which agents can execute directly. No device-dependent `integration_test/` directory exists.
 
 ---
 
@@ -132,10 +93,12 @@ sequenceDiagram
 - **Widget & UI Layer**:
   - Prefer creating small `StatelessWidget` or `StatefulWidget` classes over using helper methods that return widgets.
   - Utilize `const` constructors wherever possible for widgets and models to optimize rebuilds.
-  - **Material 3 / Color Discipline**: Use `Theme.of(context)` for styling (e.g., `Theme.of(context).colorScheme.onSurface`). Do not hardcode colors like `Colors.black` or `Colors.white`. Follow the existing card pattern: `CardThemeData` with 0 elevation and subtle border.
-- **No Direct Mutation**: Workflows and state maps must be cloned before modification.
+  - **Material 3 / Color Discipline**: Use `Theme.of(context)` for styling (e.g., `Theme.of(context).colorScheme.onSurface`). Do not hardcode colors like `Colors.black` or `Colors.white`.
+  - Follow the existing card pattern: `CardThemeData` with 0 elevation and subtle border.
 - **State & Concurrency**:
-  - Follow patterns for reactive state and ensure to check `if (!context.mounted) return;` across `async` gaps before interacting with `context`.
+  - Workflows and state maps must be cloned before modification to avoid direct mutation.
+  - Check `if (!context.mounted) return;` across `async` gaps before interacting with `context`.
+  - Ensure correct stream lifecycle management when listening to streams.
   - Network, WebSocket, and SQLite operations must always be guarded with `try-catch` blocks.
 - **Native Interop**: No custom platform channels (`MethodChannel`/`EventChannel`), Pigeon schemas, or Dart FFI bindings are present natively in this repo; it relies on established plugins (e.g., `gal`, `sqflite_common_ffi`). Fall back gracefully when native platform plugins fail and log via `debugPrint`.
 
@@ -143,15 +106,8 @@ sequenceDiagram
 
 ## 5. Agent Guardrails (Do's and Don'ts)
 
-- **Do** always re-run `flutter analyze` and `flutter test` before finalizing and committing changes.
-- **Do** use `flutter pub add <package>` or `flutter pub remove <package>` to manage packages in `pubspec.yaml`.
-- **Don't** manually edit generated files, although this project currently does not have any generated files (`*.g.dart`, `*.freezed.dart`, etc.).
-- **Don't** force-unwrap null values (`!`) unless safety has been explicitly checked or guaranteed.
+- **Do** always re-run `flutter analyze` and relevant `flutter test` targets before finalizing and committing changes.
+- **Do** use `flutter pub add <package>` or `flutter pub remove <package>` (or follow existing version-pinning conventions in `pubspec.yaml`) when managing packages.
+- **Don't** manually edit generated files, although this project currently does not have any generated files (`*.g.dart`, `*.freezed.dart`, `*.gr.dart`, `*.mocks.dart`, or generated `app_localizations*.dart`).
+- **Do** ensure ComfyUI workflows added to `workflows/` are exported in **API format** and that prompt nodes are explicitly titled `positive_prompt` and `negative_prompt`.
 
-### Working with ComfyUI Workflows
-When adding new ComfyUI workflows into `workflows/`:
-- **Do** ensure the JSON is exported in **API format** from ComfyUI (requires ComfyUI Dev Mode enabled in settings).
-- **Do** ensure prompt nodes have recognizable titles:
-  - Positive prompt: Node title set to `positive_prompt`
-  - Negative prompt: Node title set to `negative_prompt`
-- **Don't** forget to add the file to `workflows/<name>.json`. If prompt nodes are not explicitly titled, the app will attempt KSampler link tracing, but explicit titles are strongly recommended.
